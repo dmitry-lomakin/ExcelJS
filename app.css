@@ -1,0 +1,26 @@
+footer {
+    margin-top: 20px;
+}
+.exceljs-sheet {
+    border: none;
+    border-collapse: collapse;
+}
+.exceljs-sheet .cell {
+    border: solid 1px #555;
+    padding: 5px;
+    min-width: 50px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 20px;
+}
+
+.cell-editor {
+    background-color: transparent;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+.cell-editor:focus {
+    outline: none;
+}
