@@ -1,6 +1,7 @@
 'use strict';
 
 import Component from './component.js';
+import Cell from './cell.js';
 
 export default class Sheet extends Component {
     constructor({ element, rowsCount, columnsCount }) {
@@ -14,30 +15,31 @@ export default class Sheet extends Component {
         this.on('click', '.cell', (event) => {
             const cell = event.delegateTarget;
 
-            // The cell is being edited already
+            // Check if the cell is being edited already
+            // If so, do nothing
             if (cell.querySelector('input.cell-editor')) {
                 return;
             }
 
+            const initialCellContent = cell.innerHTML;
+
             Component._makeNodeEmpty(cell);
 
-            const [ colIndex, rowIndex ] = cell.dataset.index.split(':');
+            const cellIndex = cell.dataset.index;
 
             const input = document.createElement('input');
             input.setAttribute('type', 'text');
             input.classList.add('cell-editor');
+            input.value = cell.dataset.value;
             input.addEventListener('blur', (blurEvent) => {
-                this._setCellValue(colIndex, rowIndex, blurEvent.target.value);
+                this._setCellValue(cellIndex, blurEvent.target.value, initialCellContent);
             });
-
             cell.appendChild(input);
             input.focus();
         });
 
         this._element.addEventListener('cellValueChanged', (cellValueChangedEvent) => {
-            const [ colIndex, rowIndex ] = cellValueChangedEvent.detail.cellIndex.split(':');
-
-            this._updateCellValue(colIndex, rowIndex);
+            this._updateCellValue(cellValueChangedEvent.detail.cellIndex);
         });
     }
 
@@ -61,7 +63,7 @@ export default class Sheet extends Component {
         const column = Sheet._convertNumberToColumnCode(columnIndex);
 
         return `<td class="cell"
-                    data-index="${ column }:${ rowIndex }" 
+                    data-index="${ column }${ rowIndex }" 
                     data-value=""></td>`;
     }
 
@@ -72,33 +74,70 @@ export default class Sheet extends Component {
         return previousChars + lastChar;
     }
 
-    _setCellValue(colIndex, rowIndex, newValue) {
-        const cell = this._element.querySelector(`[data-index="${ colIndex }:${ rowIndex }"].cell`);
+    _setCellValue(cellIndex, newValue, initialCellContent) {
+        const cell = Cell.locate(cellIndex, this._element);
 
         if (! cell) {
             return;
         }
+
+        Component._makeNodeEmpty(cell);
 
         const actualCellValue = cell.dataset.value;
 
         if (newValue !== actualCellValue) {
             cell.dataset.value = newValue;
 
-            this._trigger('cellValueChanged', { 'cellIndex': `${ colIndex }:${ rowIndex }` });
+            this._trigger('cellValueChanged', { 'cellIndex': `${ cellIndex }` });
+        } else {
+            cell.innerHTML = initialCellContent;
         }
     }
 
-    _updateCellValue(colIndex, rowIndex) {
-        const cell = this._element.querySelector(`[data-index="${ colIndex }:${ rowIndex }"].cell`);
+    _updateCellValue(cellIndex) {
+        const cell = Cell.locate(cellIndex, this._element);
 
         if (! cell) {
             return;
         }
 
-        if ('=' !== cell.dataset.value) {
-            cell.innerHTML = cell.dataset.value;
-        } else {
-            console.log('Calculating ... ');
+        try {
+            cell.innerHTML = this._getCellValue(cellIndex);
+        } catch (e) {
+            cell.innerHTML = `<span class="error-message">&#9888; ${ e.message }</span>`;
         }
+    }
+
+    _getCellValue(cellIndex, stack = []) {
+
+        // Protection against cyclic references
+        if (stack.includes(cellIndex)) {
+            throw new ReferenceError('Cyclic reference');
+        }
+
+        const cell = Cell.locate(cellIndex, this._element);
+
+        if (! cell) {
+            return '';
+        }
+
+        const value = cell.dataset.value;
+
+        let result = '';
+
+        if ('=' !== value[0]) {
+            result = value;
+        } else {
+            stack.push(cellIndex);
+
+            let calculatedValue = value.replace(/[A-Z]+\d+/g, (match) => {
+                return this._getCellValue(match, stack);
+            });
+
+            result = eval(calculatedValue.substr(1));
+
+        }
+
+        return result;
     }
 }
