@@ -27,7 +27,7 @@ export default class Component {
         });
     }
 
-    static _makeNodeEmpty(node) {
+    static _emptyNode(node) {
         while (node.firstChild) {
             node.removeChild(node.firstChild);
         }
