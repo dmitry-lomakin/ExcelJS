@@ -11,11 +11,12 @@ footer {
 }
 .exceljs-sheet .cell {
     border: solid 1px #555;
-    width: 150px;
+    min-width: 50px;
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     height: 20px;
+    text-align: right;
 }
 
 .cell-editor {

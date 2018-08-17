@@ -5,14 +5,6 @@ export default class Component {
         this._element = element;
     }
 
-    _trigger(eventName, data) {
-        let customEvent = new CustomEvent(eventName, {
-            detail: data
-        });
-
-        this._element.dispatchEvent(customEvent);
-    }
-
     on(eventName, selector, callback) {
         this._element.addEventListener(eventName, (event) => {
             let delegateTarget = event.target.closest(selector);
@@ -32,5 +24,4 @@ export default class Component {
             node.removeChild(node.firstChild);
         }
     }
-
 }

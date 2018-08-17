@@ -29,8 +29,7 @@ export default class Cell {
             throw new ReferenceError('Cyclic reference');
         }
 
-        const cell = Cell.locate(index, this._rootElement);
-
+        const cell = this._cellByIndex(index);
         if (! cell) {
             return '';
         }
@@ -57,8 +56,7 @@ export default class Cell {
     }
 
     set value(newValue) {
-        const cell = Cell.locate(this._index, this._rootElement);
-
+        const cell = this._cellByIndex(this._index);
         if (! cell) {
             return;
         }
@@ -75,6 +73,10 @@ export default class Cell {
         if (depsNeedUpdating) {
             this._updateDependencies(cell);
         }
+    }
+
+    _cellByIndex(index) {
+        return Cell.locate(index, this._rootElement);
     }
 
     _updateContent(cell) {
@@ -113,5 +115,4 @@ export default class Cell {
             });
         }
     }
-
 }

@@ -17,16 +17,20 @@ export default class Sheet extends Component {
             const cell = event.delegateTarget;
             const cellIndex = cell.dataset.index;
             CellEditor.edit(cell, (blurEvent) => {
-                this._cell(cellIndex).value = blurEvent.target.value;
+                this._cell(cellIndex).value = blurEvent.target.value.toUpperCase();
             });
         });
     }
 
     _render() {
-        let html = `<table class="exceljs-sheet">`;
+        let html = `<table class="exceljs-sheet"><thead><tr><th></th>`;
+        for (let columnIndex = 0; columnIndex < this._columnsCount; columnIndex++) {
+            html += `<th>${ Sheet._convertNumberToColumnCode(columnIndex) }</th>`;
+        }
+        html += `</tr></thead>`;
 
         for (let rowIndex = 1; rowIndex <= this._rowCount; rowIndex++) {
-            html += `<tr>`;
+            html += `<tr><th>${ rowIndex }</th>`;
             for (let columnIndex = 0; columnIndex < this._columnsCount; columnIndex++) {
                 html += `<td class="cell"
                     data-index="${ Sheet._convertNumberToColumnCode(columnIndex) }${ rowIndex }" 
@@ -51,5 +55,4 @@ export default class Sheet extends Component {
 
         return previousChars + lastChar;
     }
-
 }
